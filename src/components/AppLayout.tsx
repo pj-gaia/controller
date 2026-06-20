@@ -2,7 +2,7 @@ import { Link, Outlet } from '@tanstack/react-router'
 
 const navItems = [
   { label: 'Dashboard', to: '/' },
-  { label: 'Products', to: '/' },
+  { label: 'Products', to: '/products' },
   { label: 'Policies', to: '/' },
 ]
 

@@ -82,3 +82,144 @@ h1 {
   font-size: 40px;
   line-height: 1.1;
 }
+
+h2 {
+  margin: 24px 0 12px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+p {
+  margin: 0;
+  color: #344054;
+  line-height: 1.6;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.product-card,
+.component-card,
+.state-card,
+.skeleton-card {
+  border: 1px solid #eaecf0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 180px;
+  padding: 16px;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.product-card:hover {
+  transform: translateY(-1px);
+  border-color: #d0d5dd;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.component-list {
+  display: grid;
+  gap: 12px;
+}
+
+.component-card {
+  padding: 16px;
+}
+
+.component-card code {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: #101828;
+  background: #f2f4f7;
+}
+
+.state-card {
+  padding: 18px;
+  color: #344054;
+  background: #fcfcfd;
+}
+
+.state-card--error {
+  color: #912018;
+  border-color: #fecdca;
+  background: #fef3f2;
+}
+
+.skeleton-card {
+  position: relative;
+  min-height: 160px;
+  overflow: hidden;
+  background: #f2f4f7;
+}
+
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+.skeleton-card--wide {
+  min-height: 260px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #175cd3;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .main-content {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+}
