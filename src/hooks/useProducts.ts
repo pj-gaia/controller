@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { api } from '../services/api'
 
 type StrapiEntity<T> = {
@@ -20,48 +20,70 @@ export type Product = StrapiEntity<{
 }>
 
 type ProductsResponse = {
-  data: Product[]
+  data?: Product[]
+}
+
+function readRichText(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const normalized = value.trim()
+    return normalized.length > 0 ? normalized : null
+  }
+
+  if (!Array.isArray(value)) {
+    return null
+  }
+
+  const text = value
+    .flatMap((block) => {
+      if (
+        typeof block === 'object' &&
+        block !== null &&
+        'children' in block &&
+        Array.isArray((block as { children: unknown[] }).children)
+      ) {
+        return (block as { children: unknown[] }).children
+          .map((child) => {
+            if (
+              typeof child === 'object' &&
+              child !== null &&
+              'text' in child &&
+              typeof (child as { text?: unknown }).text === 'string'
+            ) {
+              return (child as { text: string }).text
+            }
+
+            return ''
+          })
+          .join('')
+      }
+
+      return ''
+    })
+    .join('\n')
+    .trim()
+
+  return text.length > 0 ? text : null
+}
+
+function normalizeProducts(products: Product[] | undefined): Product[] {
+  return (products ?? []).map((product) => ({
+    ...product,
+    description: readRichText(product.description),
+  }))
 }
 
 export function useProducts() {
-  const [data, setData] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const query = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await api.get<ProductsResponse>('/api/products?populate=*')
+      return normalizeProducts(response.data)
+    },
+  })
 
-  useEffect(() => {
-    let isMounted = true
-
-    async function fetchProducts() {
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        const response = await api.get<ProductsResponse>('/api/products?populate=*')
-
-        if (isMounted) {
-          setData(response.data ?? [])
-        }
-      } catch (caughtError) {
-        if (isMounted) {
-          setError(
-            caughtError instanceof Error
-              ? caughtError
-              : new Error('Failed to load products'),
-          )
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    fetchProducts()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  return { data, isLoading, error }
+  return {
+    data: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+  }
 }

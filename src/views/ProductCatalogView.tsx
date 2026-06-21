@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useProducts } from '../hooks/useProducts'
 
 export function ProductCatalogView() {
@@ -46,9 +47,10 @@ export function ProductCatalogView() {
       <h1>Product Catalog</h1>
       <div className="grid">
         {products.map((product) => (
-          <a
+          <Link
             key={product.documentId ?? product.id}
-            href={`/products/${String(product.documentId ?? product.id)}`}
+            to="/products/$productId"
+            params={{ productId: String(product.documentId ?? product.id) }}
             className="product-card"
           >
             <div>
@@ -59,7 +61,7 @@ export function ProductCatalogView() {
               <span>{product.criticality_tier || 'No tier assigned'}</span>
               <span>{product.components?.length ?? 0} components</span>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </section>
