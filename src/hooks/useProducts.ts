@@ -19,53 +19,48 @@ export type Product = StrapiEntity<{
   components?: Component[]
 }>
 
+type RawProduct = StrapiEntity<{
+  name: string
+  slug: string
+  description?: unknown
+  criticality_tier?: string | null
+  components?: Component[]
+}>
+
 type ProductsResponse = {
-  data?: Product[]
+  data?: RawProduct[]
+}
+
+function flattenText(value: unknown): string {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => flattenText(item)).join(' ')
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    const record = value as Record<string, unknown>
+
+    if (typeof record.text === 'string') {
+      return record.text
+    }
+
+    if ('children' in record) {
+      return flattenText(record.children)
+    }
+  }
+
+  return ''
 }
 
 function readRichText(value: unknown): string | null {
-  if (typeof value === 'string') {
-    const normalized = value.trim()
-    return normalized.length > 0 ? normalized : null
-  }
-
-  if (!Array.isArray(value)) {
-    return null
-  }
-
-  const text = value
-    .flatMap((block) => {
-      if (
-        typeof block === 'object' &&
-        block !== null &&
-        'children' in block &&
-        Array.isArray((block as { children: unknown[] }).children)
-      ) {
-        return (block as { children: unknown[] }).children
-          .map((child) => {
-            if (
-              typeof child === 'object' &&
-              child !== null &&
-              'text' in child &&
-              typeof (child as { text?: unknown }).text === 'string'
-            ) {
-              return (child as { text: string }).text
-            }
-
-            return ''
-          })
-          .join('')
-      }
-
-      return ''
-    })
-    .join('\n')
-    .trim()
-
-  return text.length > 0 ? text : null
+  const normalized = flattenText(value).replace(/\s+/g, ' ').trim()
+  return normalized.length > 0 ? normalized : null
 }
 
-function normalizeProducts(products: Product[] | undefined): Product[] {
+function normalizeProducts(products: RawProduct[] | undefined): Product[] {
   return (products ?? []).map((product) => ({
     ...product,
     description: readRichText(product.description),
