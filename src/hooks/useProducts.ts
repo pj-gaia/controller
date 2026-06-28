@@ -19,65 +19,68 @@ export type Product = StrapiEntity<{
   components?: Component[]
 }>
 
-type RawProduct = StrapiEntity<{
-  name: string
-  slug: string
-  description?: unknown
-  criticality_tier?: string | null
-  components?: Component[]
-}>
+type ProductsPagination = {
+  page: number
+  pageSize: number
+  pageCount: number
+  total: number
+}
 
 type ProductsResponse = {
-  data?: RawProduct[]
+  data?: Product[]
+  meta?: {
+    pagination?: ProductsPagination
+  }
 }
 
-function flattenText(value: unknown): string {
-  if (typeof value === 'string') {
-    return value
+type UseProductsPageParams = {
+  page?: number
+  pageSize?: number
+  sortBy?: string
+  filterBy?: string
+}
+
+const DEFAULT_PAGE = 1
+const DEFAULT_PAGE_SIZE = 25
+const DEFAULT_SORT = 'name:asc'
+
+function buildProductsPath(params: {
+  page: number
+  pageSize: number
+  sortBy: string
+  filterBy?: string
+}) {
+  const search = new URLSearchParams()
+  search.set('populate', '*')
+  search.set('pagination[page]', String(params.page))
+  search.set('pagination[pageSize]', String(params.pageSize))
+  search.set('sort[0]', params.sortBy)
+
+  const normalizedFilter = params.filterBy?.trim()
+  if (normalizedFilter) {
+    search.set('filters[name][$containsi]', normalizedFilter)
   }
 
-  if (Array.isArray(value)) {
-    return value.map((item) => flattenText(item)).join(' ')
-  }
-
-  if (typeof value === 'object' && value !== null) {
-    const record = value as Record<string, unknown>
-
-    if (typeof record.text === 'string') {
-      return record.text
-    }
-
-    if ('children' in record) {
-      return flattenText(record.children)
-    }
-  }
-
-  return ''
+  return `/api/products?${search.toString()}`
 }
 
-function readRichText(value: unknown): string | null {
-  const normalized = flattenText(value).replace(/\s+/g, ' ').trim()
-  return normalized.length > 0 ? normalized : null
-}
+export function useProductsPage(params: UseProductsPageParams = {}) {
+  const page = params.page ?? DEFAULT_PAGE
+  const pageSize = params.pageSize ?? DEFAULT_PAGE_SIZE
+  const sortBy = params.sortBy ?? DEFAULT_SORT
+  const filterBy = params.filterBy?.trim() ? params.filterBy.trim() : undefined
 
-function normalizeProducts(products: RawProduct[] | undefined): Product[] {
-  return (products ?? []).map((product) => ({
-    ...product,
-    description: readRichText(product.description),
-  }))
-}
-
-export function useProducts() {
   const query = useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', 'list', { page, pageSize, sortBy, filterBy }],
     queryFn: async () => {
-      const response = await api.get<ProductsResponse>('/api/products?populate=*')
-      return normalizeProducts(response.data)
+      const path = buildProductsPath({ page, pageSize, sortBy, filterBy })
+      return api.get<ProductsResponse>(path)
     },
   })
 
   return {
-    data: query.data ?? [],
+    data: query.data?.data ?? [],
+    pagination: query.data?.meta?.pagination ?? null,
     isLoading: query.isLoading,
     error: query.error,
   }

@@ -1,8 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { useProducts } from '../hooks/useProducts'
+import { useProductsPage } from '../hooks/useProducts'
 
 export function ProductCatalogView() {
-  const { data: products, isLoading, error } = useProducts()
+  const { data: products, isLoading, error } = useProductsPage({
+    page: 1,
+    pageSize: 100,
+    sortBy: 'name:asc',
+  })
 
   if (isLoading) {
     return (

@@ -1,9 +1,13 @@
 import { Link, useParams } from '@tanstack/react-router'
-import { useProducts } from '../hooks/useProducts'
+import { useProductsPage } from '../hooks/useProducts'
 
 export function ProductDetailView() {
   const { productId } = useParams({ from: '/products/$productId' })
-  const { data: products, isLoading, error } = useProducts()
+  const { data: products, isLoading, error } = useProductsPage({
+    page: 1,
+    pageSize: 100,
+    sortBy: 'name:asc',
+  })
 
   const product = products.find(
     (item) => String(item.documentId ?? item.id) === productId,
